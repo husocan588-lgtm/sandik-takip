@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Yap - Sandık Takip Sistemi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="glass-card login-card">
+            <div class="logo-area">
+                <div class="cube-icon">📦</div>
+                <h2>Sandık Takip Sistemi</h2>
+                <p>Yönetim Paneline Hoş Geldiniz</p>
+            </div>
+            
+            {% if error %}
+            <div class="error-badge">{{ error }}</div>
+            {% endif %}
+            
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="input-group">
+                    <label for="username">Kullanıcı Adı</label>
+                    <input type="text" id="username" name="username" placeholder="admin" required autocomplete="off">
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">Şifre</label>
+                    <input type="password" id="password" name="password" placeholder="••••••" required>
+                </div>
+                
+                <button type="submit" class="btn-primary">Giriş Yap</button>
+            </form>
+            
+            <div class="footer-note">
+                <p>PythonAnywhere Web Dashboard</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

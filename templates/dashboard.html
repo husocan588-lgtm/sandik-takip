@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sandık Takip Sistemi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Ionicons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body class="dashboard-body">
+    <nav class="navbar glass-panel">
+        <div class="nav-brand">
+            <ion-icon name="cube" class="brand-icon"></ion-icon>
+            <h1>Sandık Takip Sistemi</h1>
+        </div>
+        <div class="nav-user">
+            <span class="user-badge"><ion-icon name="person-circle-outline"></ion-icon> {{ username }}</span>
+            <a href="{{ url_for('logout') }}" class="btn-logout"><ion-icon name="log-out-outline"></ion-icon> Çıkış</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header class="page-header">
+            <div>
+                <h2>Sandıklarım</h2>
+                <p class="subtitle">Sistemdeki tüm sandıkları yönetin ve takip edin.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-success" onclick="window.open('/api/export', '_blank')">
+                    <ion-icon name="download-outline"></ion-icon> Excel İndir
+                </button>
+                <button class="btn-primary" onclick="openModal('createModal')">
+                    <ion-icon name="add-circle-outline"></ion-icon> Yeni Sandık Ekle
+                </button>
+            </div>
+        </header>
+
+        <section class="map-section glass-panel" style="margin-bottom: 30px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="font-size: 16px;"><ion-icon name="map-outline" style="vertical-align: text-bottom; margin-right: 5px;"></ion-icon> Sandık Konumları</h3>
+            </div>
+            <div id="map" style="height: 400px; border-radius: 12px; z-index: 1;"></div>
+        </section>
+
+        <section class="filters glass-panel">
+            <div class="filter-group">
+                <div class="search-box">
+                    <ion-icon name="search-outline"></ion-icon>
+                    <input type="text" id="searchInput" placeholder="İsim veya MAC adresi ara..." onkeyup="filterCrates()">
+                </div>
+            </div>
+            <div class="filter-group dimensions-filter">
+                <label>Minimum İç Ölçüler (cm):</label>
+                <input type="number" id="reqWidth" placeholder="En" onkeyup="filterCrates()">
+                <input type="number" id="reqLength" placeholder="Boy" onkeyup="filterCrates()">
+                <input type="number" id="reqHeight" placeholder="Yük." onkeyup="filterCrates()">
+            </div>
+            <div class="filter-group row-flex">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="stockFilter" onchange="filterCrates()">
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label">Sadece Stokta Olanlar</span>
+                
+                <button class="btn-icon" onclick="fetchCrates()" title="Yenile">
+                    <ion-icon name="refresh-outline"></ion-icon>
+                </button>
+            </div>
+        </section>
+
+        <section class="crates-grid" id="cratesGrid">
+            <!-- Loading indicator -->
+            <div class="loader-container" id="loader">
+                <div class="spinner"></div>
+                <p>Veriler Yükleniyor...</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create/Edit Modal (Reusable logic in JS) -->
+    <div id="crateModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3 id="modalTitle">Yeni Sandık Ekle</h3>
+                <button class="btn-close" onclick="closeModal('crateModal')"><ion-icon name="close-outline"></ion-icon></button>
+            </div>
+            <div class="modal-body">
+                <form id="crateForm">
+                    <input type="hidden" id="crateId">
+                    
+                    <button type="button" class="btn-info full-width mb-15" onclick="openCatalogModal()">
+                        <ion-icon name="list-outline"></ion-icon> Katalogdan Parça Seç
+                    </button>
+
+                    <div class="form-group">
+                        <label>Parça Numarası (PN)</label>
+                        <input type="text" id="cratePn" placeholder="PN Girin">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Sandık Adı / Kodu <span class="required">*</span></label>
+                        <input type="text" id="crateName" placeholder="örn. Sandık A5" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Etiket MAC Adresi <span class="required">*</span></label>
+                        <input type="text" id="crateMac" placeholder="örn. AA:BB:CC:11:22:33" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cihaz Public Key (İsteğe Bağlı)</label>
+                        <input type="text" id="cratePublicKey" placeholder="HBBK entegrasyonu için">
+                    </div>
+
+                    <label class="group-label">Sandık İç Ölçüleri (cm)</label>
+                    <div class="dimensions-inputs mb-15">
+                        <input type="number" id="crateWidth" placeholder="En">
+                        <input type="number" id="crateLength" placeholder="Boy">
+                        <input type="number" id="crateHeight" placeholder="Yük.">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-danger mr-auto" id="btnDelete" onclick="deleteCrate()" style="display: none;">Sil</button>
+                <button type="button" class="btn-secondary" onclick="closeModal('crateModal')">İptal</button>
+                <button type="button" class="btn-primary" onclick="saveCrate()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Catalog Modal -->
+    <div id="catalogModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3>Katalog</h3>
+                <button class="btn-close" onclick="closeModal('catalogModal')"><ion-icon name="close-outline"></ion-icon></button>
+            </div>
+            <div class="modal-body">
+                <div class="search-box mb-15">
+                    <ion-icon name="search-outline"></ion-icon>
+                    <input type="text" id="catalogSearch" placeholder="PN veya Tanım ara..." onkeyup="filterCatalog()">
+                </div>
+                <div class="catalog-list" id="catalogList">
+                    <!-- Catalog items will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
