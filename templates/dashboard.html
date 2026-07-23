@@ -44,6 +44,9 @@
         <section class="map-section glass-panel" style="margin-bottom: 30px; padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="font-size: 16px;"><ion-icon name="map-outline" style="vertical-align: text-bottom; margin-right: 5px;"></ion-icon> Sandık Konumları</h3>
+                <button id="clearRouteBtn" class="btn-danger" style="display: none; padding: 5px 10px; font-size: 13px; border-radius: 6px;" onclick="clearRoute()">
+                    <ion-icon name="close-circle-outline" style="vertical-align: middle;"></ion-icon> Rotayı Kapat
+                </button>
             </div>
             <div id="map" style="height: 400px; border-radius: 12px; z-index: 1;"></div>
         </section>

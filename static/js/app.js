@@ -19,12 +19,7 @@ let currentRoute = null;
 let routeMarkers = [];
 
 async function drawRouteForCrate(publicKey) {
-    if (currentRoute) {
-        map.removeLayer(currentRoute);
-        currentRoute = null;
-    }
-    routeMarkers.forEach(m => map.removeLayer(m));
-    routeMarkers = [];
+    clearRoute(); // Önceki rotayı temizle
     
     try {
         const res = await fetch(`/api/crates/${publicKey}/route`);
@@ -50,6 +45,9 @@ async function drawRouteForCrate(publicKey) {
                 }).bindPopup(`<b>Rota Başlangıcı</b><br>İlk Adım (Geçmiş 15.)<br>${timeStr}`).addTo(map);
                 
                 routeMarkers.push(startMarker);
+                
+                // Rotayı Kapat butonunu göster
+                document.getElementById('clearRouteBtn').style.display = 'block';
             } else {
                 alert('Yeterli geçmiş rota bilgisi bulunamadı.');
             }
@@ -60,6 +58,20 @@ async function drawRouteForCrate(publicKey) {
         console.error(err);
         alert('Rota verisi alınırken hata oluştu.');
     }
+}
+
+function clearRoute() {
+    if (currentRoute) {
+        map.removeLayer(currentRoute);
+        currentRoute = null;
+    }
+    if (routeMarkers) {
+        routeMarkers.forEach(m => map.removeLayer(m));
+        routeMarkers = [];
+    }
+    
+    const btn = document.getElementById('clearRouteBtn');
+    if (btn) btn.style.display = 'none';
 }
 
 // --- Map Initialization ---
