@@ -125,6 +125,15 @@ async function fetchCrates() {
         if (!response.ok) throw new Error('Network response was not ok');
         cratesData = await response.json();
         renderCrates();
+
+        // Eğer URL'de focus_mac parametresi varsa, haritada o sandığa odaklan
+        const urlParams = new URLSearchParams(window.location.search);
+        const focusMac = urlParams.get('focus_mac');
+        if (focusMac && typeof crateMarkers !== 'undefined' && crateMarkers[focusMac]) {
+            setTimeout(() => focusOnMap(focusMac), 500);
+            // URL'i temizle ki sayfayı yenileyince tekrar odaklanmasın
+            window.history.replaceState({}, document.title, "/dashboard");
+        }
     } catch (error) {
         console.error('Error fetching crates:', error);
         grid.innerHTML = `<div class="error-badge">Veriler alınırken bir hata oluştu.</div>`;

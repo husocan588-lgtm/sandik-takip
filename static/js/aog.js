@@ -74,7 +74,7 @@ function renderAOGGrid(data) {
                 
                 if (crate.last_seen_lat && crate.last_seen_lng) {
                     locText = crate.last_seen_address ? crate.last_seen_address : `${crate.last_seen_lat.toFixed(4)}, ${crate.last_seen_lng.toFixed(4)}`;
-                    mapLink = `href="https://maps.google.com/?q=${crate.last_seen_lat},${crate.last_seen_lng}" target="_blank" style="color: #3b82f6; text-decoration: underline;" title="Haritada Aç"`;
+                    mapLink = `href="/dashboard?focus_mac=${crate.tag_mac}" style="color: #3b82f6; text-decoration: underline;" title="Sistem Haritasında Gör"`;
                 }
 
                 let statusClass = '';
