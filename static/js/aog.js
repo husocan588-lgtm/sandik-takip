@@ -63,31 +63,55 @@ function renderAOGGrid(data) {
         const kutuTipi = item['Kutu Tipi'] || 'Belirtilmemiş';
         const ucaktipiSığar = item['Uçak Tipi'] || 'Belirtilmemiş';
 
-        // Bu PN'ye sahip stoktaki sandıkları bul
-        const matchingCrates = cratesList.filter(c => c.pn === pn && c.status === 'Stokta Var');
+        // Bu PN'ye sahip olan TÜM sandıkları bul
+        const matchingCrates = cratesList.filter(c => String(c.pn).trim() === String(pn).trim());
 
-        // Eğer arama kutusuna yazılmışsa, sadece arananları göster (Arama logic'i ayrı)
-        
         let cratesHTML = '';
         if (matchingCrates.length > 0) {
             matchingCrates.forEach(crate => {
-                const locText = crate.last_seen_address ? crate.last_seen_address : 
-                               (crate.last_seen_lat ? `${crate.last_seen_lat.toFixed(4)}, ${crate.last_seen_lng.toFixed(4)} (Yeşil Alan)` : 'Konum Bilinmiyor');
+                let locText = 'Konum Bilinmiyor';
+                let mapLink = '';
                 
+                if (crate.last_seen_lat && crate.last_seen_lng) {
+                    locText = crate.last_seen_address ? crate.last_seen_address : `${crate.last_seen_lat.toFixed(4)}, ${crate.last_seen_lng.toFixed(4)}`;
+                    mapLink = `href="https://maps.google.com/?q=${crate.last_seen_lat},${crate.last_seen_lng}" target="_blank" style="color: #3b82f6; text-decoration: underline;" title="Haritada Aç"`;
+                }
+
+                let statusClass = '';
+                let statusText = '';
+                let statusColor = '';
+
+                if (crate.status === 'Stokta Var') {
+                    statusClass = 'stok-var';
+                    statusText = 'Stokta Var';
+                    statusColor = '#2ed573';
+                } else if (crate.last_seen_lat && crate.last_seen_lng) {
+                    // Stokta yok ama konumu var (Tag Aktif)
+                    statusClass = 'stok-yok';
+                    statusText = 'Stokta Yok (Tag Aktif)';
+                    statusColor = '#ffa502'; // Turuncu
+                } else {
+                    statusClass = 'stok-yok';
+                    statusText = 'Stokta Yok';
+                    statusColor = '#ff4757'; // Kırmızı
+                }
+
+                const locationDisplay = mapLink ? `<a ${mapLink}><ion-icon name="location-outline"></ion-icon> ${locText}</a>` : `<ion-icon name="location-outline"></ion-icon> ${locText}`;
+
                 cratesHTML += `
-                    <div class="crate-item stok-var">
+                    <div class="crate-item ${statusClass}" style="border-left-color: ${statusColor};">
                         <div class="crate-title">
                             <span><ion-icon name="cube-outline"></ion-icon> ${crate.name}</span>
-                            <span style="color: #2ed573;">Stokta Var</span>
+                            <span style="color: ${statusColor}; font-weight: bold;">${statusText}</span>
                         </div>
-                        <div class="crate-location">
-                            <ion-icon name="location-outline"></ion-icon> Mevcut Lokasyon: ${locText}
+                        <div class="crate-location" style="background: rgba(0,0,0,0.05);">
+                            ${locationDisplay}
                         </div>
                     </div>
                 `;
             });
         } else {
-            cratesHTML = `<div class="empty-match">Stokta bu PN (${pn}) için uygun sandık bulunamadı.</div>`;
+            cratesHTML = `<div class="empty-match">Sistemde bu PN (${pn}) için tanımlı bir sandık bulunamadı.</div>`;
         }
 
         const cardHTML = `

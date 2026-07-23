@@ -248,6 +248,25 @@ button {
     gap: 20px;
 }
 
+.nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: var(--text-primary);
+}
+
+.nav-link.active {
+    color: var(--accent-blue);
+}
+
 .user-badge {
     display: flex;
     align-items: center;
