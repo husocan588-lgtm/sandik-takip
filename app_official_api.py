@@ -277,6 +277,22 @@ def sync_hbbk_data():
     finally:
         conn.close()
 
+# Rota Geçmişi (Frontend için CORS Proxy)
+@app.route('/api/crates/<public_key>/route', methods=['GET'])
+def get_crate_route(public_key):
+    api_key = "hk_lZZ8t1fifpKfRuMsrcZb1AVSz161I_Ti"
+    base_url = f"https://api.hbb-k.com/api/v1/devices/{public_key}/locations?limit=15"
+    headers = {"X-API-KEY": api_key}
+    
+    try:
+        response = requests.get(base_url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            return jsonify({'error': 'Rota bilgisi alınamadı', 'status': response.status_code}), response.status_code
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # Katalog Listeleme
 @app.route('/api/catalog', methods=['GET'])
 def get_catalog():

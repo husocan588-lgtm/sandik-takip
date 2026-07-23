@@ -16,17 +16,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let currentRoute = null;
+let routeMarkers = [];
 
 async function drawRouteForCrate(publicKey) {
     if (currentRoute) {
         map.removeLayer(currentRoute);
         currentRoute = null;
     }
+    routeMarkers.forEach(m => map.removeLayer(m));
+    routeMarkers = [];
     
     try {
-        const res = await fetch(`https://api.hbb-k.com/api/v1/devices/${publicKey}/locations?limit=50`, {
-            headers: { 'X-API-KEY': 'hk_lZZ8t1fifpKfRuMsrcZb1AVSz161I_Ti' }
-        });
+        const res = await fetch(`/api/crates/${publicKey}/route`);
         const json = await res.json();
         
         if (json.ok && json.data) {
@@ -34,6 +35,21 @@ async function drawRouteForCrate(publicKey) {
             if (latlngs.length > 1) {
                 currentRoute = L.polyline(latlngs, {color: '#e74c3c', weight: 4, dashArray: '5, 10'}).addTo(map);
                 map.fitBounds(currentRoute.getBounds());
+                
+                // 15. adımı (veya dizideki en eski adımı) belirgin göster
+                const oldestStep = latlngs[latlngs.length - 1];
+                const oldestTime = json.data[json.data.length - 1].collectedAt;
+                const timeStr = oldestTime ? new Date(oldestTime).toLocaleString('tr-TR') : '';
+                
+                const startMarker = L.circleMarker(oldestStep, {
+                    color: '#f39c12',
+                    fillColor: '#f1c40f',
+                    fillOpacity: 1,
+                    radius: 12,
+                    weight: 3
+                }).bindPopup(`<b>Rota Başlangıcı</b><br>İlk Adım (Geçmiş 15.)<br>${timeStr}`).addTo(map);
+                
+                routeMarkers.push(startMarker);
             } else {
                 alert('Yeterli geçmiş rota bilgisi bulunamadı.');
             }
