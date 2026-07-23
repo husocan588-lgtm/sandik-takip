@@ -411,5 +411,59 @@ def get_aog_list():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Yeni Sandık Bilgisi Ekleme (Excel'e ve Veritabanı Kataloğuna yazma)
+@app.route('/api/add_crate_info', methods=['POST'])
+def add_crate_info():
+    data = request.json
+    pn = data.get('pn')
+    desc = data.get('desc')
+    ac_type = data.get('ac_type')
+    kutu_tipi = data.get('kutu_tipi')
+    ucak_tipi = data.get('ucak_tipi')
+    width = data.get('width', 0)
+    length = data.get('length', 0)
+    height = data.get('height', 0)
+    
+    if not pn or not desc:
+        return jsonify({'error': 'PN ve Tanım (Desc) zorunludur.'}), 400
+
+    # 1. Veritabanındaki parts_catalog'a ekle (Tag eşleştirmesi için)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO parts_catalog (pn, description, width, length, height) 
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (pn) DO UPDATE 
+            SET description = EXCLUDED.description, width = EXCLUDED.width, length = EXCLUDED.length, height = EXCLUDED.height
+        ''', (pn, desc, width, length, height))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': f'Kataloğa eklerken hata: {str(e)}'}), 500
+    finally:
+        conn.close()
+
+    # 2. Excel dosyasına (AOG LIST.xlsx) yeni satır olarak ekle
+    try:
+        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'AOG LIST.xlsx')
+        parent_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'AOG LIST.xlsx')
+        excel_path = local_path if os.path.exists(local_path) else parent_path
+
+        if not os.path.exists(excel_path):
+            return jsonify({'error': 'AOG LIST.xlsx bulunamadı, ancak kataloğa eklendi.'}), 404
+
+        wb = openpyxl.load_workbook(excel_path)
+        ws = wb.active
+        
+        # Kolon sırası: PN(0), Kaç Kez(1), Kaç Adet(2), A/C TYPE(3), DESC(4), Meydan(5), Lokasyon(6), Bin(7), Uzunluk(8), Genişlik(9), Yükseklik(10), Kutu Tipi(11), Uçak Tipi(12), Durum(13)
+        new_row = [pn, "", "", ac_type, desc, "", "", "", length, width, height, kutu_tipi, ucak_tipi, "Yeni Eklendi"]
+        ws.append(new_row)
+        wb.save(excel_path)
+        
+        return jsonify({'message': 'Yeni Sandık Bilgisi başarıyla eklendi!'}), 201
+    except Exception as e:
+        return jsonify({'error': f'Excel dosyasına yazarken hata: {str(e)}'}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)

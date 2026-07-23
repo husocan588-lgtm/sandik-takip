@@ -151,3 +151,63 @@ function filterAOG() {
 
     renderAOGGrid(filteredData);
 }
+
+// Yeni Sandık Bilgisi Ekle Modal İşlemleri
+function openAOGModal() {
+    document.getElementById('addAOGForm').reset();
+    document.getElementById('addAOGModal').classList.add('active');
+}
+
+function closeAOGModal() {
+    document.getElementById('addAOGModal').classList.remove('active');
+}
+
+async function submitAOGForm() {
+    const pn = document.getElementById('newPn').value.trim();
+    const desc = document.getElementById('newDesc').value.trim();
+    const acType = document.getElementById('newAcType').value.trim();
+    const kutuTipi = document.getElementById('newKutuTipi').value.trim();
+    const ucakTipi = document.getElementById('newUcakTipi').value.trim();
+    const width = document.getElementById('newWidth').value;
+    const length = document.getElementById('newLength').value;
+    const height = document.getElementById('newHeight').value;
+
+    if (!pn || !desc) {
+        alert("Parça Numarası (PN) ve Tanım (Açıklama) alanları zorunludur.");
+        return;
+    }
+
+    const payload = {
+        pn: pn,
+        desc: desc,
+        ac_type: acType,
+        kutu_tipi: kutuTipi,
+        ucak_tipi: ucakTipi,
+        width: width ? parseFloat(width) : 0,
+        length: length ? parseFloat(length) : 0,
+        height: height ? parseFloat(height) : 0
+    };
+
+    try {
+        const response = await fetch('/api/add_crate_info', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("Sandık bilgisi başarıyla eklendi! Veriler Excel dosyasına ve sisteme kaydedildi.");
+            closeAOGModal();
+            fetchAOGData(); // Listeyi yenile
+        } else {
+            alert("Hata oluştu: " + result.error);
+        }
+    } catch (error) {
+        console.error("Hata:", error);
+        alert("Bağlantı hatası: " + error.message);
+    }
+}
