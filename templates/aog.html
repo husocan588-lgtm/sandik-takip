@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AOG Yönetimi - Sandık Takip Sistemi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Ionicons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        .aog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .aog-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-top: 4px solid #ff4757;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .aog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+        }
+        .aog-pn {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2f3542;
+        }
+        .aog-ac {
+            background: #dfe4ea;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .aog-desc {
+            font-size: 0.95rem;
+            color: #57606f;
+        }
+        .crates-match {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ccc;
+        }
+        .crate-item {
+            background: #f1f2f6;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        .crate-item.stok-var {
+            border-left: 4px solid #2ed573;
+        }
+        .crate-item.stok-yok {
+            border-left: 4px solid #ff4757;
+        }
+        .crate-title {
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+        }
+        .crate-details {
+            margin-top: 5px;
+            color: #57606f;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        .crate-location {
+            margin-top: 8px;
+            font-weight: 600;
+            color: #2f3542;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #eccc68;
+            padding: 5px 8px;
+            border-radius: 4px;
+            display: inline-flex;
+        }
+        .empty-match {
+            color: #ff4757;
+            font-style: italic;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+    <nav class="navbar glass-panel">
+        <div class="nav-brand">
+            <ion-icon name="cube" class="brand-icon"></ion-icon>
+            <h1>Sandık Takip Sistemi</h1>
+        </div>
+        <div class="nav-links" style="margin-left: 20px; flex-grow: 1;">
+            <a href="{{ url_for('dashboard') }}" class="nav-link" style="margin-right: 15px;"><ion-icon name="cube-outline"></ion-icon> Sandıklarım</a>
+            <a href="{{ url_for('aog') }}" class="nav-link active"><ion-icon name="airplane-outline"></ion-icon> AOG Yönetimi</a>
+        </div>
+        <div class="nav-user">
+            <span class="user-badge"><ion-icon name="person-circle-outline"></ion-icon> {{ username }}</span>
+            <a href="{{ url_for('logout') }}" class="btn-logout"><ion-icon name="log-out-outline"></ion-icon> Çıkış</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header class="page-header">
+            <div>
+                <h2>AOG Yönetimi</h2>
+                <p class="subtitle">AOG listesindeki parçalar ile mevcut sandıklarınızı otomatik eşleştirin.</p>
+            </div>
+        </header>
+
+        <section class="filters glass-panel">
+            <div class="filter-group">
+                <div class="search-box">
+                    <ion-icon name="search-outline"></ion-icon>
+                    <input type="text" id="aogSearchInput" placeholder="PN, Tanım veya Uçak Tipi ara..." onkeyup="filterAOG()">
+                </div>
+            </div>
+            <div class="filter-group row-flex">
+                <button class="btn-icon" onclick="fetchAOGData()" title="Listeyi Yenile">
+                    <ion-icon name="refresh-outline"></ion-icon>
+                </button>
+            </div>
+        </section>
+
+        <section class="aog-grid" id="aogGrid">
+            <!-- Loading indicator -->
+            <div class="loader-container" id="aogLoader">
+                <div class="spinner"></div>
+                <p>AOG Excel Verileri Yükleniyor...</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/aog.js') }}"></script>
+</body>
+</html>

@@ -19,6 +19,10 @@
             <ion-icon name="cube" class="brand-icon"></ion-icon>
             <h1>Sandık Takip Sistemi</h1>
         </div>
+        <div class="nav-links" style="margin-left: 20px; flex-grow: 1;">
+            <a href="{{ url_for('dashboard') }}" class="nav-link active"><ion-icon name="cube-outline"></ion-icon> Sandıklarım</a>
+            <a href="{{ url_for('aog') }}" class="nav-link" style="margin-left: 15px;"><ion-icon name="airplane-outline"></ion-icon> AOG Yönetimi</a>
+        </div>
         <div class="nav-user">
             <span class="user-badge"><ion-icon name="person-circle-outline"></ion-icon> {{ username }}</span>
             <a href="{{ url_for('logout') }}" class="btn-logout"><ion-icon name="log-out-outline"></ion-icon> Çıkış</a>

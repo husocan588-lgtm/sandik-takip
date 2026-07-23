@@ -59,6 +59,13 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template('dashboard.html', username=session.get('username'))
 
+# Web AOG Yönetimi
+@app.route('/aog')
+def aog():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('aog.html', username=session.get('username'))
+
 # Yeni Sandık/Tag Kaydetme
 @app.route('/api/crates', methods=['POST'])
 def create_crate():
@@ -340,5 +347,40 @@ def keepalive():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+# AOG Listesini Excel'den Okuma
+@app.route('/api/aog_list', methods=['GET'])
+def get_aog_list():
+    try:
+        # Önce backend klasörü içinde (Render/Github için), yoksa bir üst klasörde ara (Lokal test için)
+        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'AOG LIST.xlsx')
+        parent_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'AOG LIST.xlsx')
+        
+        excel_path = local_path if os.path.exists(local_path) else parent_path
+        
+        if not os.path.exists(excel_path):
+            return jsonify({'error': 'AOG LIST.xlsx bulunamadı. Lütfen Excel dosyasını sunucuya yüklediğinizden emin olun.'}), 404
+            
+        wb = openpyxl.load_workbook(excel_path, data_only=True)
+        ws = wb.active
+        rows = list(ws.iter_rows(values_only=True))
+        if len(rows) < 2:
+            return jsonify([])
+            
+        headers = [str(h).strip() if h else f'col_{i}' for i, h in enumerate(rows[0])]
+        aog_data = []
+        for row in rows[1:]:
+            if not row[0]: # PN boş ise satırı atla
+                continue
+            row_dict = {}
+            for i, cell in enumerate(row):
+                header = headers[i] if i < len(headers) else f'col_{i}'
+                row_dict[header] = cell
+            aog_data.append(row_dict)
+            
+        return jsonify(aog_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)
+
